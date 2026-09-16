@@ -1,0 +1,18 @@
+{
+  "name": "EDUCODE",
+  "short_name": "EDUCODE",
+  "description": "Aprende a programar jugando, con misiones secretas y recompensas.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0d1733",
+  "theme_color": "#15204a",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
