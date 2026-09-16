@@ -71,21 +71,23 @@ export function Shell() {
         </nav>
         <div className="hud">
           <span className="stat-chip">⭐ {save.stars}</span>
-          <span className="stat-chip">
-            {rank.glyph} {save.xp} XP
-          </span>
+          {upcoming ? (
+            <span className="stat-chip">
+              {rank.glyph} {save.xp} XP
+              <span className="progress" style={{ width: 72, display: 'inline-block', marginLeft: 8, verticalAlign: 'middle' }}>
+                <span style={{ width: `${Math.min(100, (save.xp / upcoming.minXp) * 100)}%` }} />
+              </span>
+            </span>
+          ) : (
+            <span className="stat-chip">
+              {rank.glyph} {save.xp} XP
+            </span>
+          )}
           <button className="icon-btn" onClick={() => save.toggleMute()} aria-label={save.muted ? 'Activar sonido' : 'Silenciar'}>
             {save.muted ? '🔇' : '🔊'}
           </button>
         </div>
       </header>
-      {upcoming && location.pathname !== '/' ? (
-        <div className="page" style={{ paddingBottom: 0 }}>
-          <div className="progress" title="Progreso de rango">
-            <span style={{ width: `${Math.min(100, (save.xp / upcoming.minXp) * 100)}%` }} />
-          </div>
-        </div>
-      ) : null}
       <main className="page">
         <AnimatePresence mode="wait">
           <motion.div key={location.pathname} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>

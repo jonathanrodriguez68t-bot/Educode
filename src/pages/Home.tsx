@@ -13,11 +13,11 @@ type SkyCtx = {
 }
 
 const islandSpot = [
-  { left: '8%', top: '18%' },
-  { left: '70%', top: '14%' },
-  { left: '12%', top: '52%' },
-  { left: '66%', top: '50%' },
-  { left: '38%', top: '30%' },
+  { left: '8%', top: '16%' },
+  { left: '70%', top: '12%' },
+  { left: '12%', top: '48%' },
+  { left: '66%', top: '46%' },
+  { left: '38%', top: '22%' },
 ]
 
 export function Home() {
@@ -126,7 +126,7 @@ export function Home() {
         </button>
       ))}
 
-      <div className="fat-cloud" style={{ left: '44%', top: '8%' }}>
+      <div className="fat-cloud" style={{ left: '40%', top: '6%' }}>
         <button style={{ background: 'transparent', border: 0, padding: 0 }} onClick={() => setCloudOpen(true)} aria-label="Nube sospechosa">
           <CloudArt />
         </button>

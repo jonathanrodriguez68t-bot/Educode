@@ -32,17 +32,24 @@ export function Profile() {
             })}
           </div>
           <div>
+            <h1 className="title" style={{ fontSize: 40, margin: 0 }}>
+              {save.name}
+            </h1>
             <form
+              className="row"
               onSubmit={(event) => {
                 event.preventDefault()
                 save.setName(name)
               }}
             >
-              <input className="name-input" value={name} maxLength={16} onChange={(e) => setName(e.target.value)} />
+              <input className="name-input" value={name} maxLength={16} onChange={(e) => setName(e.target.value)} aria-label="Cambiar apodo" />
+              <button className="btn" type="submit">
+                Guardar apodo
+              </button>
             </form>
-            <h1 className="title" style={{ fontSize: 36, marginTop: 8 }}>
+            <h2 className="title" style={{ fontSize: 28, marginTop: 8 }}>
               {rank.glyph} {rank.name}
-            </h1>
+            </h2>
             <p>
               {save.xp} XP · {save.stars} estrellas · {save.unlocks.badges.length} insignias
             </p>
