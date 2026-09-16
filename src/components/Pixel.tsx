@@ -4,7 +4,7 @@ import { PixelArt } from '../art'
 import { useSave } from '../store'
 
 const lines = [
-  '¡Hola! Toca las islas para aprender.',
+  '¡Hola! Toca un botón o el platillo.',
   'Dicen que un platillo vuela por aquí...',
   'Si ves algo brillar, ¡tócalo!',
   'Acaríciame otra vez y cuento un secreto.',
@@ -14,9 +14,10 @@ const lines = [
 type PixelProps = {
   size?: number
   speak?: string
+  quiet?: boolean
 }
 
-export function Pixel({ size = 150, speak }: PixelProps) {
+export function Pixel({ size = 150, speak, quiet = false }: PixelProps) {
   const petPixel = useSave((s) => s.petPixel)
   const muted = useSave((s) => s.muted)
   const [phrase, setPhrase] = useState(speak ?? lines[0])
@@ -35,7 +36,7 @@ export function Pixel({ size = 150, speak }: PixelProps) {
       }}
       aria-label="Acariciar a Pixel"
     >
-      <div className="speech">{phrase}</div>
+      {quiet ? null : <div className="speech">{phrase}</div>}
       <div style={{ transform: bounce ? 'scale(1.08) rotate(-4deg)' : 'scale(1)', transition: 'transform 0.22s cubic-bezier(.2,1.4,.3,1)' }}>
         <PixelArt />
       </div>

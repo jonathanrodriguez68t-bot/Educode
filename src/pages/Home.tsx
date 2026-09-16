@@ -1,10 +1,24 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction, type ReactNode } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { CloudArt, CometArt, CrystalArt, PortalArt, UfoArt } from '../art'
+import {
+  BrushArt,
+  CometArt,
+  CrystalArt,
+  GearArt,
+  LaptopArt,
+  PadArt,
+  PlayArt,
+  PortalArt,
+  PuzzleArt,
+  RocketArt,
+  SnakeArt,
+  TabletArt,
+  UfoArt,
+} from '../art'
 import { sfx } from '../audio'
 import { Pixel } from '../components/Pixel'
-import { worlds } from '../data'
+import { firstPlayable } from '../data'
 import { useSave } from '../store'
 
 type SkyCtx = {
@@ -12,40 +26,38 @@ type SkyCtx = {
   setSky: Dispatch<SetStateAction<'night' | 'day'>>
 }
 
-const islandSpot = [
-  { left: '8%', top: '16%' },
-  { left: '70%', top: '12%' },
-  { left: '12%', top: '48%' },
-  { left: '66%', top: '46%' },
-  { left: '38%', top: '22%' },
+const orbits = [
+  { id: 'html', Comp: TabletArt, label: 'Castillo HTML', to: '/mundos/html', angle: 210 },
+  { id: 'play', Comp: PlayArt, label: 'Jugar ahora', to: 'first', angle: 18 },
+  { id: 'js', Comp: LaptopArt, label: 'Jungla JavaScript', to: '/mundos/javascript', angle: 148 },
+  { id: 'css', Comp: GearArt, label: 'Océano CSS', to: '/mundos/css', angle: 78 },
+  { id: 'brush', Comp: BrushArt, label: 'Pinta tu perfil', to: '/perfil', angle: 300 },
 ]
 
 export function Home() {
   const nav = useNavigate()
   const save = useSave()
   const { sky, setSky } = useOutletContext<SkyCtx>()
-  const [mouse, setMouse] = useState({ x: 0, y: 0 })
   const [ufo, setUfo] = useState(false)
   const [comet, setComet] = useState(false)
-  const [cloudOpen, setCloudOpen] = useState(false)
+  const [puzzleOpen, setPuzzleOpen] = useState(false)
   const [stars, setStars] = useState(() => makeStars())
+  const first = firstPlayable(save.completedLevels)
 
   useEffect(() => {
     let alive = true
     let appearTimer = 0
     let hideTimer = 0
-
     const appear = () => {
       if (!alive) return
       setUfo(true)
       if (!useSave.getState().muted) sfx.ufo()
       hideTimer = window.setTimeout(() => {
         if (alive) setUfo(false)
-        appearTimer = window.setTimeout(appear, 14000 + Math.random() * 12000)
+        appearTimer = window.setTimeout(appear, 16000 + Math.random() * 10000)
       }, 9000)
     }
-
-    appearTimer = window.setTimeout(appear, 4500)
+    appearTimer = window.setTimeout(appear, 7000)
     return () => {
       alive = false
       window.clearTimeout(appearTimer)
@@ -53,87 +65,145 @@ export function Home() {
     }
   }, [])
 
-  useEffect(() => {
-    const id = window.setInterval(() => setComet(true), 22000)
-    return () => window.clearInterval(id)
-  }, [])
+  const goFirst = () => nav(`/jugar/${first.worldId}/${first.levelId}`)
 
-  const parallax = useMemo(() => ({ x: mouse.x * 12, y: mouse.y * 8 }), [mouse])
+  const orbitNodes = useMemo(
+    () =>
+      orbits.map((item) => {
+        const rad = (item.angle * Math.PI) / 180
+        return {
+          ...item,
+          x: 50 + Math.cos(rad) * 46.5,
+          y: 50 + Math.sin(rad) * 46.5,
+        }
+      }),
+    [],
+  )
 
   return (
-    <section
-      className="hero-sky"
-      onPointerMove={(event) => {
-        const rect = event.currentTarget.getBoundingClientRect()
-        setMouse({
-          x: (event.clientX - rect.left) / rect.width - 0.5,
-          y: (event.clientY - rect.top) / rect.height - 0.5,
-        })
-      }}
-    >
-      <button
-        className="sky-toggle"
-        onClick={() => {
-          setSky((prev) => (prev === 'day' ? 'night' : 'day'))
-          save.toggleSky()
-          if (!save.muted) sfx.tap()
-        }}
-        aria-label="Cambiar día y noche"
-      >
-        {sky === 'day' ? '🌙' : '☀️'}
-      </button>
-
-      <motion.div style={{ x: parallax.x, y: parallax.y }} className="ground" />
-
-      {worlds.map((world, index) => {
-        const spot = islandSpot[index] ?? islandSpot[0]
-        const done = world.levels.filter((level) => save.completedLevels.includes(level.id)).length
-        return (
-          <motion.button
-            key={world.id}
-            className="island"
-            style={{ left: spot.left, top: spot.top, animationDelay: `${index * 0.35}s` }}
-            whileHover={{ scale: 1.04, rotate: -1.5 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              if (!save.muted) sfx.tap()
-              nav(`/mundos/${world.id}`)
-            }}
-          >
-            <div style={{ fontSize: 32 }}>{world.glyph}</div>
-            <b>{world.name}</b>
-            <span>{world.tagline}</span>
-            <span>
-              {done}/{world.levels.length} misiones
-            </span>
-          </motion.button>
-        )
-      })}
-
+    <section className={sky === 'night' ? 'hub-stage is-night' : 'hub-stage'}>
       {stars.map((star) => (
         <button
           key={star.id}
-          className="sky-star"
+          className="hub-spark"
           style={{ left: star.left, top: star.top }}
           onClick={() => {
             save.bumpSkyStar()
             if (!save.muted) sfx.collect()
             setStars((current) => [...current.filter((item) => item.id !== star.id), ...makeStars(1)])
           }}
-          aria-label="Recoger estrella"
-        >
-          ⭐
-        </button>
+          aria-label="Estrella"
+        />
       ))}
 
-      <div className="fat-cloud" style={{ left: '40%', top: '6%' }}>
-        <button style={{ background: 'transparent', border: 0, padding: 0 }} onClick={() => setCloudOpen(true)} aria-label="Nube sospechosa">
-          <CloudArt />
+      <div className="hub-col hub-col-left">
+        <div className="hub-ufo-park">
+          <motion.button
+            className="hub-prop hub-ufo-park-btn"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+            onClick={() => {
+              if (!save.muted) sfx.ufo()
+              nav('/secreto/ovni')
+            }}
+            aria-label="Platillo volador"
+          >
+            <UfoArt />
+          </motion.button>
+        </div>
+        <HubChip>7-9 Años</HubChip>
+        <HubBtn className="hub-btn violet" onClick={() => nav('/mundos/bloques')}>
+          🧩 Aprende con Bloques
+        </HubBtn>
+        <HubBtn className="hub-btn cyan" onClick={() => nav('/perfil')}>
+          🎨 Crea tu Personaje
+        </HubBtn>
+      </div>
+
+      <div className="hub-planet-wrap">
+        <motion.button
+          className="hub-planet"
+          animate={{ scale: [1, 1.015, 1] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+          onClick={() => {
+            setSky((prev) => (prev === 'day' ? 'night' : 'day'))
+            save.toggleSky()
+            if (!save.muted) sfx.tap()
+          }}
+          aria-label="Planeta EDUCODE"
+        >
+          <div className="hub-core">
+            <p>¡Juega y Aprende!</p>
+            <motion.div animate={{ rotate: [0, 6, -4, 0] }} transition={{ duration: 5, repeat: Infinity }}>
+              <SnakeArt />
+            </motion.div>
+          </div>
+        </motion.button>
+
+        <div className="hub-orbit">
+          {orbitNodes.map((item) => (
+            <motion.button
+              key={item.id}
+              className="hub-orbit-item"
+              style={{ left: `${item.x}%`, top: `${item.y}%` }}
+              whileHover={{ scale: 1.12, rotate: -8 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={() => {
+                if (!save.muted) sfx.tap()
+                if (item.to === 'first') goFirst()
+                else nav(item.to)
+              }}
+              aria-label={item.label}
+            >
+              <item.Comp />
+            </motion.button>
+          ))}
+        </div>
+
+        <div className="hub-pixel">
+          <Pixel size={88} speak={`¡Hola ${save.name}!`} quiet />
+        </div>
+      </div>
+
+      <div className="hub-col hub-col-right">
+        <div className="hub-rocket-park">
+          <motion.button
+            className="hub-prop hub-rocket-btn"
+            animate={{ y: [0, -12, 0], rotate: [8, 14, 8] }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+            onClick={() => {
+              save.completeSecret('cometa-fugaz')
+              if (!save.muted) sfx.collect()
+              setComet(true)
+            }}
+            aria-label="Cohete"
+          >
+            <RocketArt />
+          </motion.button>
+        </div>
+        <HubChip>10-11 Años</HubChip>
+        <HubBtn className="hub-btn white" onClick={() => nav('/mundos/python')}>
+          Aventuras de Código Python
+        </HubBtn>
+        <HubBtn className="hub-btn white" onClick={() => nav('/mundos/javascript')}>
+          Desafío de Circuitos
+        </HubBtn>
+        <HubBtn className="hub-btn orange" onClick={goFirst}>
+          🎮 Tu Primer Juego
+        </HubBtn>
+      </div>
+
+      <motion.div
+        className="hub-prop hub-puzzle"
+        animate={{ rotate: [-8, 6, -8] }}
+        transition={{ duration: 5, repeat: Infinity }}
+      >
+        <button className="hub-puzzle-hit" onClick={() => setPuzzleOpen(true)} aria-label="Pieza de rompecabezas">
+          <PuzzleArt />
         </button>
-        {cloudOpen || save.completedSecrets.includes('cristal-oculto') ? (
+        {puzzleOpen || save.completedSecrets.includes('cristal-oculto') ? (
           <button
-            className="crystal"
-            style={{ left: '58px', top: '28px' }}
+            className="hub-crystal"
             onClick={() => {
               save.completeSecret('cristal-oculto')
               if (!save.muted) sfx.success()
@@ -143,47 +213,19 @@ export function Home() {
             <CrystalArt />
           </button>
         ) : null}
-      </div>
+      </motion.div>
 
-      <AnimatePresence>
-        {ufo ? (
-          <motion.button
-            className="ufo"
-            initial={{ x: -120, y: 40, opacity: 0 }}
-            animate={{ x: ['-18vw', '18vw', '48vw', '78vw', '108vw'], y: [40, 90, 30, 110, 50], opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 8.5, ease: 'easeInOut' }}
-            onClick={() => {
-              if (!save.muted) sfx.ufo()
-              nav('/secreto/ovni')
-            }}
-            aria-label="Platillo volador secreto"
-          >
-            <UfoArt />
-          </motion.button>
-        ) : null}
-      </AnimatePresence>
+      <motion.div className="hub-prop hub-pad" animate={{ y: [0, -10, 0] }} transition={{ duration: 3.4, repeat: Infinity }}>
+        <PadArt />
+      </motion.div>
 
-      <AnimatePresence>
-        {comet ? (
-          <motion.button
-            className="comet"
-            initial={{ x: 640, y: -20, opacity: 0 }}
-            animate={{ x: -80, y: 180, opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 3.4, ease: 'linear' }}
-            onAnimationComplete={() => setComet(false)}
-            onClick={() => {
-              save.completeSecret('cometa-fugaz')
-              if (!save.muted) sfx.collect()
-              setComet(false)
-            }}
-            aria-label="Cometa fugaz"
-          >
-            <CometArt />
-          </motion.button>
-        ) : null}
-      </AnimatePresence>
+      <button
+        className="hub-speaker"
+        onClick={() => save.toggleMute()}
+        aria-label={save.muted ? 'Activar sonido' : 'Silenciar'}
+      >
+        {save.muted ? '🔇' : '🔊'}
+      </button>
 
       <button
         className="mini-portal"
@@ -196,17 +238,66 @@ export function Home() {
         <PortalArt />
       </button>
 
-      <div className="pixel-wrap">
-        <Pixel speak={`Hola ${save.name}. El parque está vivo: toca, busca y juega.`} />
-      </div>
+      <AnimatePresence>
+        {ufo ? (
+          <motion.button
+            className="ufo"
+            initial={{ x: '-20vw', y: 30, opacity: 0 }}
+            animate={{ x: '110vw', y: [30, 70, 20], opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 8.8, ease: 'easeInOut' }}
+            onClick={() => nav('/secreto/ovni')}
+            aria-label="Platillo secreto"
+          >
+            <UfoArt />
+          </motion.button>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {comet ? (
+          <motion.button
+            className="comet"
+            initial={{ x: '70vw', y: -30, opacity: 0 }}
+            animate={{ x: '-20vw', y: 160, opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2.8, ease: 'linear' }}
+            onAnimationComplete={() => setComet(false)}
+            aria-label="Cometa"
+          >
+            <CometArt />
+          </motion.button>
+        ) : null}
+      </AnimatePresence>
     </section>
   )
 }
 
-function makeStars(count = 6) {
+function HubChip({ children }: { children: ReactNode }) {
+  return <div className="hub-chip">{children}</div>
+}
+
+function HubBtn({ className, children, onClick }: { className: string; children: ReactNode; onClick: () => void }) {
+  const muted = useSave((s) => s.muted)
+  return (
+    <motion.button
+      className={className}
+      whileHover={{ y: -6, scale: 1.04 }}
+      whileTap={{ scale: 0.96, y: 0 }}
+      onClick={() => {
+        if (!muted) sfx.tap()
+        onClick()
+      }}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+function makeStars(count = 10) {
   return Array.from({ length: count }, (_, i) => ({
     id: `${Date.now()}-${i}-${Math.random()}`,
-    left: `${8 + Math.random() * 84}%`,
-    top: `${10 + Math.random() * 55}%`,
+    left: `${6 + Math.random() * 88}%`,
+    top: `${8 + Math.random() * 70}%`,
   }))
 }

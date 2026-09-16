@@ -2,40 +2,33 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState, type FormEvent } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { sfx } from '../audio'
-import { colors, nextRank, rankFor } from '../data'
+import { logos } from '../data'
 import { useSave } from '../store'
+import { EducodeLogo } from './Logo'
 import { RewardToasts } from './RewardToasts'
 
 const links = [
-  { to: '/', label: 'Inicio' },
-  { to: '/mundos', label: 'Mundos' },
-  { to: '/misiones', label: 'Misiones' },
-  { to: '/perfil', label: 'Perfil' },
+  { to: '/mundos', label: 'ITINERARIO' },
+  { to: '/', label: 'EDUCODE' },
+  { to: '/misiones', label: 'INSIGNIAS' },
 ]
 
 export function Shell() {
   const location = useLocation()
   const save = useSave()
-  const rank = rankFor(save.xp)
-  const upcoming = nextRank(save.xp)
-  const accent = colors.find((color) => color.id === save.equipped.color)?.value ?? '#3ddc97'
-  const [sky, setSky] = useState<'night' | 'day'>('night')
+  const [sky, setSky] = useState<'night' | 'day'>('day')
   const [name, setName] = useState(save.name)
-
-  useEffect(() => {
-    document.documentElement.style.setProperty('--accent', accent)
-  }, [accent])
+  const glyph = logos.find((item) => item.id === save.equipped.logo)?.glyph ?? '👤'
+  const home = location.pathname === '/'
 
   useEffect(() => {
     sfx.resume()
   }, [location.pathname])
 
-  const day = sky === 'day' && location.pathname === '/'
-
   return (
-    <div className={day ? 'shell day' : 'shell'}>
+    <div className={home ? 'shell hub' : 'shell'}>
       <div className="bg-stars" aria-hidden="true">
-        {Array.from({ length: 36 }, (_, i) => (
+        {Array.from({ length: 40 }, (_, i) => (
           <span
             key={i}
             className="star"
@@ -47,48 +40,32 @@ export function Shell() {
           />
         ))}
       </div>
-      <header className="topbar">
-        <button
-          className="brand"
-          onClick={() => {
+      <header className="topbar hub-topbar">
+        <EducodeLogo
+          onSecret={() => {
             save.tapLogo()
             if (!save.muted) sfx.tap()
           }}
-          aria-label="EDUCODE, toca para un secreto"
-        >
-          <span className="brand-mark">👾</span>
-          <span>
-            <span className="brand-title">EDUCODE</span>
-            <span className="brand-sub">parque de código</span>
-          </span>
-        </button>
-        <nav className="nav">
+        />
+        <nav className="hub-nav">
           {links.map((link) => (
-            <NavLink key={link.to} to={link.to} end={link.to === '/'} className={({ isActive }) => (isActive ? 'nav-pill active' : 'nav-pill')}>
+            <NavLink key={link.to} to={link.to} end={link.to === '/'} className={({ isActive }) => (isActive ? 'hub-nav-link active' : 'hub-nav-link')}>
               {link.label}
             </NavLink>
           ))}
         </nav>
-        <div className="hud">
-          <span className="stat-chip">⭐ {save.stars}</span>
-          {upcoming ? (
-            <span className="stat-chip">
-              {rank.glyph} {save.xp} XP
-              <span className="progress" style={{ width: 72, display: 'inline-block', marginLeft: 8, verticalAlign: 'middle' }}>
-                <span style={{ width: `${Math.min(100, (save.xp / upcoming.minXp) * 100)}%` }} />
-              </span>
-            </span>
-          ) : (
-            <span className="stat-chip">
-              {rank.glyph} {save.xp} XP
-            </span>
+        <div className="hub-end">
+          {home ? null : (
+            <button className="hub-speaker header-speaker" onClick={() => save.toggleMute()} aria-label={save.muted ? 'Activar sonido' : 'Silenciar'}>
+              {save.muted ? '🔇' : '🔊'}
+            </button>
           )}
-          <button className="icon-btn" onClick={() => save.toggleMute()} aria-label={save.muted ? 'Activar sonido' : 'Silenciar'}>
-            {save.muted ? '🔇' : '🔊'}
-          </button>
+          <NavLink to="/perfil" className="hub-avatar" aria-label="Tu perfil">
+            <span>{glyph}</span>
+          </NavLink>
         </div>
       </header>
-      <main className="page">
+      <main className={home ? 'page hub-page' : 'page'}>
         <AnimatePresence mode="wait">
           <motion.div key={location.pathname} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
             <Outlet context={{ sky, setSky }} />
@@ -106,15 +83,15 @@ export function Shell() {
               if (!save.muted) sfx.success()
             }}
           >
-            <div style={{ fontSize: 42 }}>🤖</div>
+            <div style={{ fontSize: 42 }}>🐍</div>
             <h2 className="title" style={{ fontSize: 34 }}>
-              ¡Hola, explorador!
+              ¡Bienvenido a EDUCODE!
             </h2>
-            <p>Soy Pixel. En EDUCODE se aprende a programar jugando. ¿Cómo quieres que te llame?</p>
+            <p>Un parque para aprender a programar jugando. ¿Cómo quieres que te llamemos?</p>
             <input className="name-input" value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder="Tu apodo" />
             <div className="row" style={{ marginTop: 14 }}>
               <button className="btn primary" type="submit">
-                ¡Entrar al parque!
+                ¡Jugar y aprender!
               </button>
             </div>
           </form>

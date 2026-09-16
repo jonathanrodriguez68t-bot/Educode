@@ -535,6 +535,15 @@ export function levelById(worldId: string, levelId: string) {
   return world?.levels.find((level) => level.id === levelId)
 }
 
+export function firstPlayable(completed: string[]): { worldId: string; levelId: string } {
+  for (const world of worlds) {
+    for (const level of world.levels) {
+      if (!completed.includes(level.id)) return { worldId: world.id, levelId: level.id }
+    }
+  }
+  return { worldId: 'python', levelId: 'py-1' }
+}
+
 export function cosmeticName(kind: 'colors' | 'banners' | 'logos' | 'decorations' | 'frames' | 'badges', id: string) {
   const tables = { colors, banners, logos, decorations, frames, badges }
   return tables[kind].find((item) => item.id === id)?.name ?? id
